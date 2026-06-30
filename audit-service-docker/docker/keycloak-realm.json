@@ -1,0 +1,35 @@
+{
+  "realm": "pista",
+  "enabled": true,
+  "sslRequired": "none",
+  "roles": {
+    "realm": [
+      { "name": "AUDIT_WRITER", "description": "POST audit events — service accounts only" },
+      { "name": "AUDIT_READER", "description": "GET audit events — clinical leads, compliance" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "audit-client",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "audit-secret",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true
+    }
+  ],
+  "users": [
+    {
+      "username": "audit-writer",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "writer123", "temporary": false }],
+      "realmRoles": ["AUDIT_WRITER", "AUDIT_READER"]
+    },
+    {
+      "username": "audit-reader",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "reader123", "temporary": false }],
+      "realmRoles": ["AUDIT_READER"]
+    }
+  ]
+}

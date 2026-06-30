@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: workflow-sm-service
+  datasource:
+    url-template: jdbc:postgresql://10.100.13.3:5434/{tenant}
+    username: kghparas
+    password: kghparas
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: false
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+
+kafka:
+  topics:
+    state-changed: pista.workflow.state-changed
+
+app:
+  tenants: ${APP_TENANTS:tenant_kgh,tenant_kgsc}
+
+server:
+  port: 8085
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+logging:
+  level:
+    com.kghospital.workflow: INFO
+
+services:
+  iam:
+    base-url: ${IAM_SERVICE_URL:http://iam-service:8084}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      iam-introspection:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 20s
+        sliding-window-size: 10
+        minimum-number-of-calls: 5

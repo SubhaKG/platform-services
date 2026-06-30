@@ -1,0 +1,74 @@
+spring:
+  application:
+    name: integration-registry-service
+  datasource:
+    url-template: jdbc:postgresql://10.100.13.3:5434/{tenant}
+    username: kghparas
+    password: kghparas
+  platform-datasource:
+    url: ${PLATFORM_DB_URL:jdbc:postgresql://localhost:5432/platform_catalogue}
+    username: ${PLATFORM_DB_USERNAME:kgadmin}
+    password: ${PLATFORM_DB_PASSWORD:secret}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: false   # TenantFlywayMigrationRunner + PlatformCatalogueMigrationRunner handle migration
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+
+kafka:
+  topics:
+    degraded-pattern: "%s.platform.adapter.degraded"
+    suspended-pattern: "%s.platform.adapter.suspended"
+    recovered-pattern: "%s.platform.adapter.recovered"
+    credential-rotated-pattern: "%s.platform.adapter.credential_rotated"
+    config-updated-pattern: "%s.platform.adapter.config_updated"
+    notification-dispatch-pattern: "%s.platform.notification.alert.dispatch"
+
+services:
+  iam:
+    base-url: ${IAM_SERVICE_URL:http://iam-service:8084}
+  audit:
+    base-url: ${AUDIT_SERVICE_URL:http://audit-service:8081}
+  secrets-manager:
+    base-url: ${SECRETS_MANAGER_URL:http://secrets-manager:8200}
+
+app:
+  tenants: ${APP_TENANTS:tenant_kgh,tenant_kgsc}
+
+server:
+  port: 8093
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      iam-introspection:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 20s
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+      secrets-manager:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 20s
+        sliding-window-size: 5
+        minimum-number-of-calls: 3
+
+logging:
+  level:
+    com.kghospital.integrationregistry: INFO

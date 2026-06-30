@@ -1,0 +1,93 @@
+name: iam-service
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: iam-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kgadmin
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/init-dbs.sh:/docker-entrypoint-initdb.d/init-dbs.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kgadmin"]
+      interval: 10s
+      retries: 10
+    networks:
+      - iam-net
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: iam-keycloak
+    restart: unless-stopped
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: dev-mem
+    ports:
+      - "8083:8080"
+    volumes:
+      - ./docker/keycloak-realm.json:/opt/keycloak/data/import/realm.json
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready || exit 1"]
+      interval: 20s
+      retries: 15
+      start_period: 30s
+    networks:
+      - iam-net
+
+  # IAM is the ONLY service that talks to Keycloak directly per
+  # PLAT-001 spec §5.6 / §10. PLAT-002 and PLAT-003 call IAM's
+  # /api/v1/auth/verify endpoint instead of decoding JWTs locally.
+  iam-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iam-service
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL_TEMPLATE: jdbc:postgresql://postgres:5432/{tenant}_iam
+      DB_USERNAME: kgadmin
+      DB_PASSWORD: secret
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: pista
+      KEYCLOAK_CLIENT_ID: iam-client
+      KEYCLOAK_CLIENT_SECRET: iam-secret
+      KEYCLOAK_JWK_URI: http://keycloak:8080/realms/pista/protocol/openid-connect/certs
+      APP_TENANTS: tenant_kgh,tenant_kgsc
+      AUDIT_SERVICE_URL: http://audit-service:8081
+      SPRING_PROFILES_ACTIVE: dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health || exit 1"]
+      interval: 30s
+      retries: 5
+      start_period: 90s
+    networks:
+      - iam-net
+      - pista-shared
+
+volumes:
+  postgres-data:
+
+networks:
+  iam-net:
+    driver: bridge
+  # Shared network so audit-service and workflow-sm-service can reach
+  # iam-service by name for synchronous JWT introspection calls.
+  pista-shared:
+    driver: bridge
+    name: pista-shared-net

@@ -1,0 +1,35 @@
+{
+  "realm": "pista",
+  "enabled": true,
+  "sslRequired": "none",
+  "roles": {
+    "realm": [
+      { "name": "WORKFLOW_WRITER" },
+      { "name": "WORKFLOW_READER" },
+      { "name": "BREAK_GLASS" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "workflow-client",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "workflow-secret",
+      "directAccessGrantsEnabled": true
+    }
+  ],
+  "users": [
+    {
+      "username": "physician",
+      "enabled": true,
+      "credentials": [{"type": "password", "value": "physician123", "temporary": false}],
+      "realmRoles": ["WORKFLOW_WRITER", "WORKFLOW_READER"]
+    },
+    {
+      "username": "pharmacist",
+      "enabled": true,
+      "credentials": [{"type": "password", "value": "pharmacist123", "temporary": false}],
+      "realmRoles": ["WORKFLOW_WRITER", "WORKFLOW_READER"]
+    }
+  ]
+}

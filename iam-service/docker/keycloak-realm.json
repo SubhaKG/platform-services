@@ -1,0 +1,104 @@
+{
+  "realm": "pista",
+  "enabled": true,
+  "sslRequired": "none",
+  "accessTokenLifespan": 1800,
+  "roles": {
+    "realm": [
+      { "name": "PHYSICIAN",           "description": "Attending/treating physician — CPOE order entry, prescriptions" },
+      { "name": "RESIDENT",            "description": "Resident physician — order entry under supervision" },
+      { "name": "PHARMACIST",          "description": "Pharmacist — order verification, dispensing" },
+      { "name": "NURSE",               "description": "Ward nurse — administration, IV infusions" },
+      { "name": "ADMIN",               "description": "Clinical admin — order cancellation authority" },
+      { "name": "ROLE_LAB_TECH",       "description": "Lab Technician" },
+      { "name": "ROLE_RADIOLOGIST",    "description": "Radiologist" },
+      { "name": "ROLE_TENANT_ADMIN",   "description": "Tenant Admin — BLOCKED from patient data" },
+      { "name": "ROLE_SERVICE",        "description": "S2S service account" },
+      { "name": "ROLE_BREAK_GLASS",    "description": "Break-Glass emergency override" },
+      { "name": "ROLE_PLATFORM_ADMIN", "description": "Platform admin — migration retry" },
+      { "name": "AUDIT_WRITER",        "description": "PLAT-002 service-to-service audit write" },
+      { "name": "AUDIT_READER",        "description": "PLAT-002 audit query — compliance, clinical leads" },
+      { "name": "WORKFLOW_WRITER",     "description": "PLAT-003 workflow transitions" },
+      { "name": "WORKFLOW_READER",     "description": "PLAT-003 workflow status queries" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "iam-client",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "iam-secret",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false
+    },
+    {
+      "clientId": "cpoe-service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "cpoe-secret",
+      "serviceAccountsEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountClientRoles": { "realm-management": [] }
+    },
+    {
+      "clientId": "audit-service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "audit-secret",
+      "serviceAccountsEnabled": true,
+      "directAccessGrantsEnabled": false
+    },
+    {
+      "clientId": "workflow-sm-service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "workflow-secret",
+      "serviceAccountsEnabled": true,
+      "directAccessGrantsEnabled": false
+    }
+  ],
+  "users": [
+    {
+      "username": "dr-smith",
+      "enabled": true,
+      "credentials": [{"type": "password", "value": "doctor123", "temporary": false}],
+      "realmRoles": ["PHYSICIAN", "WORKFLOW_WRITER", "WORKFLOW_READER", "AUDIT_READER"]
+    },
+    {
+      "username": "dr-resident",
+      "enabled": true,
+      "credentials": [{"type": "password", "value": "resident123", "temporary": false}],
+      "realmRoles": ["RESIDENT", "WORKFLOW_WRITER", "WORKFLOW_READER"]
+    },
+    {
+      "username": "pharmacist-lee",
+      "enabled": true,
+      "credentials": [{"type": "password", "value": "pharma123", "temporary": false}],
+      "realmRoles": ["PHARMACIST", "WORKFLOW_WRITER", "WORKFLOW_READER", "AUDIT_READER"]
+    },
+    {
+      "username": "nurse-jones",
+      "enabled": true,
+      "credentials": [{"type": "password", "value": "nurse123", "temporary": false}],
+      "realmRoles": ["NURSE", "WORKFLOW_WRITER", "WORKFLOW_READER"]
+    },
+    {
+      "username": "clinical-admin",
+      "enabled": true,
+      "credentials": [{"type": "password", "value": "cladmin123", "temporary": false}],
+      "realmRoles": ["ADMIN", "WORKFLOW_WRITER", "WORKFLOW_READER", "AUDIT_READER"]
+    },
+    {
+      "username": "tenant-admin",
+      "enabled": true,
+      "credentials": [{"type": "password", "value": "admin123", "temporary": false}],
+      "realmRoles": ["ROLE_TENANT_ADMIN"]
+    },
+    {
+      "username": "platform-admin",
+      "enabled": true,
+      "credentials": [{"type": "password", "value": "platform123", "temporary": false}],
+      "realmRoles": ["ROLE_PLATFORM_ADMIN"]
+    }
+  ]
+}
